@@ -2,3 +2,4 @@ paths.py
 .DS_Store
 *.ipynb
 *.xlsx
+*.docx
