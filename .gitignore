@@ -3,6 +3,6 @@ paths.py
 *.ipynb
 *.xlsx
 *.docx
-*.xltm
-*.bas
 *.csv
+Archive/
+.venv/
