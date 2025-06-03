@@ -4,7 +4,9 @@ from dateutil.relativedelta import relativedelta
 from helper import *
 from paths import *
 import hashlib
-
+## Assigning half-year bins for recency
+five_years_ago_start, two_years_ago_start, today = get_halfyear_reference_dates()
+half_year_info = get_half_year_info()
 ### ============== Import Files ============== ###
 addresses = pd.read_csv(
     address_path,
@@ -16,6 +18,7 @@ addresses = pd.read_csv(
 v21056 = pd.read_csv(
     rechnung_path, sep=";", encoding="cp850", parse_dates=["AUF_ANLAGE"]
 )
+stat = pd.read_csv(stat_path, sep=";", encoding="cp850", usecols=["NUMMER", "ERSTKAUF"])
 inx = pd.read_excel(
     inx_path, usecols=["NUMMER", "NL_TYPE"]
 )  ## To be Updated with the path from the inxmail automated list
@@ -25,6 +28,7 @@ kw = pd.read_csv('kw.csv',sep=';',encoding='cp850',usecols=['NUMMER','Kundengrup
 
 addresses = pad_column_with_zeros(addresses, "NUMMER")
 inx = pad_column_with_zeros(inx, "NUMMER")
+stat = pad_column_with_zeros(stat, "NUMMER")
 kw = pad_column_with_zeros(kw, "NUMMER")
 v21056["NUMMER"] = v21056["VERWEIS"].str[2:12]
 
@@ -37,11 +41,14 @@ addresses["GEBURT"] = pd.to_datetime(
 v21056["AUF_ANLAGE"] = pd.to_datetime(
     v21056["AUF_ANLAGE"], format="%Y-%m-%d", errors="coerce"
 )
-
+stat["ERSTKAUF"] = pd.to_datetime(
+    stat["ERSTKAUF"], format="%Y-%m-%d", errors="coerce"
+)
 
 ### ============== Merge Address + Rechnung + Inxmail ============== ###
 address_details = pd.merge(addresses, v21056, on="NUMMER", how="left")
 address_details = pd.merge(address_details, inx, on="NUMMER", how="left")
+address_details = pd.merge(address_details, stat, on="NUMMER", how="left")
 
 ## Computing Netto Umsatz
 address_details["NETTO_UMSATZ"] = address_details["BEST_WERT"] - address_details["MWST1"] - address_details["MWST2"] - address_details["MWST3"]
@@ -52,6 +59,7 @@ address_details = address_details[
         "QUELLE",
         "GEBURT",
         "SYS_ANLAGE",
+        "ERSTKAUF",
         "PLZ",
         "ANREDE",
         "NL_TYPE",
@@ -80,10 +88,13 @@ address_details.loc[
     & (address_details["SYS_ANLAGE"].dt.year <= dt.date.today().year - 1),
     "Kundengruppe",
 ] = "Alt-Interessenten"
+address_details.loc[
+    (address_details["ERSTKAUF"] > pd.Timestamp(half_year_info['prev_start'])),
+    "Kundengruppe",
+] = "New Customers"
 
 
-## Assigning half-year bins for recency
-five_years_ago_start, two_years_ago_start, today = get_halfyear_reference_dates()
+
 
 ### ============== Table with all Customer Info ============== ###
 addresses_grouped = (
@@ -268,16 +279,21 @@ final_addresses["rfm_label"] = final_addresses.apply(assign_rfm_label, axis=1)
 
 ## Adding the Interessenten labels to the rfm_label columns
 final_addresses.loc[(final_addresses["kundengruppe"] == "Alt-Interessenten") & (final_addresses['gesamt_monetary'] == 0), "rfm_label"] = (
-    "Alt-Interessenten"
+    "Interessenten"
 )
 final_addresses.loc[final_addresses["kundengruppe"] == "Neu-Interessenten", "rfm_label"] = (
-    "Neu-Interessenten"
+    "Interessenten"
 )
+final_addresses.loc[final_addresses["kundengruppe"] == "New Customers", "rfm_label"] = (
+    "New Customers"
+)
+final_addresses.loc[final_addresses["gesamt_monetary"]==0, "rfm_label"] = "Interessenten"
+
 final_addresses = final_addresses.drop(columns=["kundengruppe"])  ## Remove Kundengruppe column
 
 
 ### ============== Saving the RFM Values to Excel ============== ###
-kundengruppe = ['Champions','Loyal customers',"Can't lose them",'Potential Loyalists','Need Attention','At Risk','New Customers','Promising','About to Sleep','Hibernating','Lost','Neu-Interessenten','Alt-Interessenten']
+kundengruppe = ['Champions','Loyal customers',"Can't lose them",'Potential Loyalists','Need Attention','At Risk','New Customers','Gemischt','Promising','About to Sleep','Hibernating','Lost','Interessenten',"Unclassified"]
 # filtered_final = final_addresses[
 #     (final_addresses["recency"] >= "2015-01-01") | (final_addresses["recency"] == pd.Timestamp("1800-01-01"))]
 
@@ -285,9 +301,13 @@ kw = kw.rename(columns={"Kundengruppe":"Alte_Kundengeruppe"})
 filtered_final_merged = final_addresses.merge(kw,on='NUMMER',how='left')
 filtered_final_merged = filtered_final_merged.drop_duplicates(subset='NUMMER')
 
-gesamt_table = filtered_final_merged.groupby(['rfm_label','Alte_Kundengeruppe']).agg(Anzhal_Kunden=('NUMMER','count'),NL_KUNDEN=('nl_type','count')).reset_index()
-gesamt_gesamt = gesamt_table.groupby('rfm_label').agg(Anzhal_Kunden=('Anzhal_Kunden','sum'),NL_KUNDEN=('NL_KUNDEN','sum')).reset_index()
-# with pd.ExcelWriter(f"{sharepoint}rfm_segments.xlsx", engine="xlsxwriter") as writer:
+gesamt_table = filtered_final_merged.groupby(['rfm_label','Alte_Kundengeruppe']).agg(Anzahl_Kunden=('NUMMER','count'),NL_KUNDEN=('nl_type','count')).reset_index()
+gesamt_table['rfm_label'] = pd.Categorical(gesamt_table['rfm_label'], categories=kundengruppe, ordered=True)
+gesamt_table = gesamt_table.sort_values(by='rfm_label')
+gesamt_gesamt = gesamt_table.groupby('rfm_label').agg(Anzahl_Kunden=('Anzahl_Kunden','sum'),NL_KUNDEN=('NL_KUNDEN','sum')).reset_index()
+gesamt_gesamt['rfm_label'] = pd.Categorical(gesamt_gesamt['rfm_label'], categories=kundengruppe, ordered=True)
+gesamt_gesamt = gesamt_gesamt.sort_values(by='rfm_label')
+# with pd.ExcelWriter(f"{sharepoint}rfm_segments.xlsx", engine="xlsxwriter") as writer
 #     for item in kundengruppe:
 #         filtered_final_merged[filtered_final_merged["rfm_label"] == item].to_excel(
 #             writer, sheet_name=item, index=False

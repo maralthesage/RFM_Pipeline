@@ -348,7 +348,7 @@ def assign_rfm_label(row):
     elif mf in [3, 4] and r in [1, 2, 3, 4]:
         return "At Risk"
     elif mf == 1 and r in [9, 10]:
-        return "New Customers"
+        return "Gemischt"
     elif mf == 1 and r in [7, 8]:
         return "Promising"
     elif mf in [1, 2] and r in [5, 6]:
