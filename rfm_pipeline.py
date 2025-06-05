@@ -14,11 +14,12 @@ addresses = pd.read_csv(
     encoding="cp850",
     usecols=["NUMMER", "SYS_ANLAGE", "QUELLE", "GEBURT", "PLZ", "ANREDE"],
     parse_dates=["SYS_ANLAGE", "GEBURT"],
+    low_memory=False
 )
 v21056 = pd.read_csv(
     rechnung_path, sep=";", encoding="cp850", parse_dates=["AUF_ANLAGE"]
 )
-stat = pd.read_csv(stat_path, sep=";", encoding="cp850", usecols=["NUMMER", "ERSTKAUF"])
+
 inx = pd.read_excel(
     inx_path, usecols=["NUMMER", "NL_TYPE"]
 )  ## To be Updated with the path from the inxmail automated list
@@ -28,7 +29,6 @@ kw = pd.read_csv('kw.csv',sep=';',encoding='cp850',usecols=['NUMMER','Kundengrup
 
 addresses = pad_column_with_zeros(addresses, "NUMMER")
 inx = pad_column_with_zeros(inx, "NUMMER")
-stat = pad_column_with_zeros(stat, "NUMMER")
 kw = pad_column_with_zeros(kw, "NUMMER")
 v21056["NUMMER"] = v21056["VERWEIS"].str[2:12]
 
@@ -41,14 +41,12 @@ addresses["GEBURT"] = pd.to_datetime(
 v21056["AUF_ANLAGE"] = pd.to_datetime(
     v21056["AUF_ANLAGE"], format="%Y-%m-%d", errors="coerce"
 )
-stat["ERSTKAUF"] = pd.to_datetime(
-    stat["ERSTKAUF"], format="%Y-%m-%d", errors="coerce"
-)
+
 
 ### ============== Merge Address + Rechnung + Inxmail ============== ###
 address_details = pd.merge(addresses, v21056, on="NUMMER", how="left")
 address_details = pd.merge(address_details, inx, on="NUMMER", how="left")
-address_details = pd.merge(address_details, stat, on="NUMMER", how="left")
+
 
 ## Computing Netto Umsatz
 address_details["NETTO_UMSATZ"] = address_details["BEST_WERT"] - address_details["MWST1"] - address_details["MWST2"] - address_details["MWST3"]
@@ -59,7 +57,6 @@ address_details = address_details[
         "QUELLE",
         "GEBURT",
         "SYS_ANLAGE",
-        "ERSTKAUF",
         "PLZ",
         "ANREDE",
         "NL_TYPE",
@@ -88,10 +85,6 @@ address_details.loc[
     & (address_details["SYS_ANLAGE"].dt.year <= dt.date.today().year - 1),
     "Kundengruppe",
 ] = "Alt-Interessenten"
-address_details.loc[
-    (address_details["ERSTKAUF"] > pd.Timestamp(half_year_info['prev_start'])),
-    "Kundengruppe",
-] = "New Customers"
 
 
 
@@ -106,6 +99,7 @@ addresses_grouped = (
         plz=("PLZ", "first"),
         nl_type=("NL_TYPE", "first"),
         registered_since=("SYS_ANLAGE", "first"),
+        first_kaufdatum=('AUF_ANLAGE', 'min'),
         recency=("AUF_ANLAGE", "max"),
         gesamt_frequency=("AUFTRAG_NR", "nunique"),
         gesamt_monetary=("NETTO_UMSATZ", "sum"),
@@ -125,7 +119,11 @@ addresses_grouped = (
 ## Removing those who had only 2 Orders and returned one of their orders (so they are not really seasonal customers)
 addresses_grouped.loc[addresses_grouped["gesamt_frequency"] == 1, "seasonal_ostern"] = False
 addresses_grouped.loc[addresses_grouped["gesamt_frequency"] == 1, "seasonal_weihnachten"] = False
-
+addresses_grouped.loc[
+    (addresses_grouped["first_kaufdatum"] > pd.Timestamp(half_year_info['prev_start'])),
+    "kundengruppe",
+] = "New Customers"
+print(addresses_grouped['kundengruppe'].value_counts())
 ### ============== Separating the Orders of 3-5 years ago from the orders of past 2 years ============== ###
 address_detail_5to3 = address_details[
     (address_details["AUF_ANLAGE"] >= five_years_ago_start)
@@ -285,15 +283,30 @@ final_addresses.loc[final_addresses["kundengruppe"] == "Neu-Interessenten", "rfm
     "Interessenten"
 )
 final_addresses.loc[final_addresses["kundengruppe"] == "New Customers", "rfm_label"] = (
-    "New Customers"
+    "Neukunden"
 )
 final_addresses.loc[final_addresses["gesamt_monetary"]==0, "rfm_label"] = "Interessenten"
 
+
 final_addresses = final_addresses.drop(columns=["kundengruppe"])  ## Remove Kundengruppe column
 
-
 ### ============== Saving the RFM Values to Excel ============== ###
-kundengruppe = ['Champions','Loyal customers',"Can't lose them",'Potential Loyalists','Need Attention','At Risk','New Customers','Gemischt','Promising','About to Sleep','Hibernating','Lost','Interessenten',"Unclassified"]
+kundengruppe = [
+    'Champions',
+    'Treue Kunden',
+    'Nicht zu verlieren',
+    'Potenziell loyale Kunden',
+    'Brauchen Aufmerksamkeit',
+    'Gefährdete Kunden',
+    'Neukunden',
+    'Reaktivierte Kunden',
+    'Vielversprechende Kunden',
+    'Abwandernde Kunden',
+    'Schlafende Kunden',
+    'Verlorene Kunden',
+    'Interessenten',
+    'Nicht klassifiziert'
+]
 # filtered_final = final_addresses[
 #     (final_addresses["recency"] >= "2015-01-01") | (final_addresses["recency"] == pd.Timestamp("1800-01-01"))]
 

@@ -337,28 +337,28 @@ def assign_rfm_label(row):
 
     if mf in [4, 5] and r in [10, 9]:
         return "Champions"
-    elif mf in [3, 4, 5] and r in [5, 6, 7, 8]:
-        return "Loyal customers"
+    elif mf in [4, 5] and r in [5, 6, 7, 8]:
+        return "Treue Kunden"
     elif mf == 5 and r in [1, 2, 3, 4]:
-        return "Can't lose them"
+        return 'Nicht zu verlieren'
     elif mf in [2, 3, 4] and r in [7, 8, 9, 10]:
-        return "Potential Loyalists"
-    elif mf == 3 and r == [5, 6]:
-        return "Need Attention"
+        return "Potenziell loyale Kunden"
+    elif mf in [3] and r in [5, 6]:
+        return 'Brauchen Aufmerksamkeit'
     elif mf in [3, 4] and r in [1, 2, 3, 4]:
-        return "At Risk"
+        return "Gefährdete Kunden"
     elif mf == 1 and r in [9, 10]:
-        return "Gemischt"
+        return "Reaktivierte Kunden"
     elif mf == 1 and r in [7, 8]:
-        return "Promising"
+        return "Vielversprechende Kunden"
     elif mf in [1, 2] and r in [5, 6]:
-        return "About to Sleep"
+        return "Abwandernde Kunden"
     elif mf == 2 and r in [1, 2, 3, 4]:
-        return "Hibernating"
+        return "Schlafende Kunden"
     elif mf == 1 and r in [1, 2, 3, 4]:
-        return "Lost"
+        return "Verlorene Kunden"
     else:
-        return "Unclassified"
+        return "Nicht klassifiziert"
 
 
 
