@@ -1,8 +1,7 @@
 import pandas as pd
 import datetime as dt
 from dateutil.relativedelta import relativedelta
-import numpy as np
-from datetime import datetime, date
+from datetime import  date
 
 
 anrede = {
@@ -65,20 +64,11 @@ def assign_sources(aa):
     ## Corporate Benefits
     aa.loc[(aa["QUELLE"].str[3:6] == "943"), "SOURCE"] = "Corporate Benefits"
     ## Genussmagazin
-    aa.loc[
-        (aa["QUELLE"].str.contains(r"936gm|925gm", case=False, regex=True, na=False)),
-        "SOURCE",
-    ] = "Genussmagazin"
+    aa.loc[(aa["QUELLE"].str.contains(r"936gm|925gm", case=False, regex=True, na=False)),"SOURCE"] = "Genussmagazin"
     ## Google Shopping
-    aa.loc[
-        (aa["QUELLE"].str.contains(r"926gs|924gs", case=False, regex=True, na=False)),
-        "SOURCE",
-    ] = "Google Shopping"
+    aa.loc[(aa["QUELLE"].str.contains(r"926gs|924gs", case=False, regex=True, na=False)),"SOURCE"] = "Google Shopping"
     ## Internet Import
-    aa.loc[
-        (aa["QUELLE"].str.contains(r"20i|INT", case=False, regex=True, na=False)),
-        "SOURCE",
-    ] = "Internet Import"
+    aa.loc[(aa["QUELLE"].str.contains(r"20i|INT", case=False, regex=True, na=False)), "SOURCE"] = "Internet Import"
     ## Inventur Trost
     aa.loc[(aa["QUELLE"].str[3:] == "022iv"), "SOURCE"] = "Inventur Trost"
     ## Lionshome
@@ -108,42 +98,24 @@ def assign_sources(aa):
     ## Social Media
     aa.loc[(aa["QUELLE"].str[3:6] == "925"), "SOURCE"] = "Social Media"
     ## Pinterest
-    aa.loc[
-        (
-            aa["QUELLE"].str.contains(
-                r"925pi|925pt|932aa|pinterest", regex=True, case=False, na=False
-            )
-        ),
-        "SOURCE",
-    ] = "Pinterest"
+    aa.loc[(aa["QUELLE"].str.contains(
+                r"925pi|925pt|932aa|pinterest", regex=True, case=False, na=False)),"SOURCE"] = "Pinterest"
     ## Instagram
     aa.loc[
-        (aa["QUELLE"].str.contains(r"925ig", regex=True, case=False, na=False)),
-        "SOURCE",
-    ] = "Instagram"
+        (aa["QUELLE"].str.contains(r"925ig", regex=True, case=False, na=False)),"SOURCE"] = "Instagram"
     ## Facebook
     aa.loc[
-        (aa["QUELLE"].str.contains(r"925fb", regex=True, case=False, na=False)),
-        "SOURCE",
-    ] = "Facebook"
+        (aa["QUELLE"].str.contains(r"925fb", regex=True, case=False, na=False)),"SOURCE"] = "Facebook"
     ## Sovendus
     aa.loc[
-        (aa["QUELLE"].str.contains(r"928so|sov", regex=True, case=False, na=False)),
-        "SOURCE",
-    ] = "Sovendus"
+        (aa["QUELLE"].str.contains(r"928so|sov", regex=True, case=False, na=False)),"SOURCE"] = "Sovendus"
 
     ## Fremdadressen
     aa.loc[
-        (aa["QUELLE"].str[3].isin(["1", "2", "3", "4"]))
-        & (aa["QUELLE"].str[4:6].isin(["01"])),
-        "SOURCE",
-    ] = "Fremdadressen"
+        (aa["QUELLE"].str[3].isin(["1", "2", "3", "4"])) & (aa["QUELLE"].str[4:6].isin(["01"])),"SOURCE"] = "Fremdadressen"
     ## Katalog und Karte
     aa.loc[
-        (aa["QUELLE"].str[3].isin(["1", "2", "3", "4"]))
-        & (aa["QUELLE"].str[4:6].isin(["02", "03", "04"])),
-        "SOURCE",
-    ] = "Katalog und Karte"
+        (aa["QUELLE"].str[3].isin(["1", "2", "3", "4"])) & (aa["QUELLE"].str[4:6].isin(["02", "03", "04"])), "SOURCE"] = "Katalog und Karte"
     ## Beilage
     aa.loc[(aa["QUELLE"].str[3:6].isin(["011", "012", "013"])), "SOURCE"] = "Beilage"
     aa.loc[(aa["QUELLE"].str[3:6].isin(["040"])), "SOURCE"] = "Beilage"

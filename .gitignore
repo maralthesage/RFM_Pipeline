@@ -6,3 +6,4 @@ paths.py
 *.csv
 Archive/
 .venv/
+Data/

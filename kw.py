@@ -99,7 +99,7 @@ address_kw_nk_kw = address_kw_nk_kw[address_kw_nk_kw["Kundengruppe"] != "Neukund
 all_addresses_labeled = pd.concat([address_kw_nk_kw, nk])
 ## Removing duplicated Nummers
 all_addresses_labeled = all_addresses_labeled.drop_duplicates(subset=["NUMMER"])
-
+today = dt.date.today()
 all_addresses_labeled[["NUMMER", "Kundengruppe"]].to_csv(
-    "kw.csv", sep=";", index=False, encoding="cp850"
+    f"Data/kw_{today}.csv", sep=";", index=False, encoding="cp850"
 )
