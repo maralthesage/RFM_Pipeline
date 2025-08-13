@@ -365,7 +365,7 @@ gesamt_gesamt = gesamt_gesamt.sort_values(by="rfm_label")
 #             writer, sheet_name=item, index=False
 #         )
 
-
+filtered_final_merged.to_csv('/Volumes/MARAL/Data/rfm_labels/rfm_labels.csv', sep=';', index=False, encoding='cp850')
 with pd.ExcelWriter(f"Data/rfm_segments_{today.date()}.xlsx", engine="xlsxwriter") as writer:
     for item in kundengruppe:
         df = filtered_final_merged[filtered_final_merged["rfm_label"] == item]
