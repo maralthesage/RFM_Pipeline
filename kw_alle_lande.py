@@ -23,10 +23,22 @@ current_end = pd.to_datetime(result["prev_end"] + relativedelta(months=6))
 ## Importing all required data
 kunden_segments = pd.read_excel(ks_path)
 kunden_segment_dict = dict(zip(kunden_segments["Alt"], kunden_segments["Neu"]))
-kw = pd.read_csv(kw_path, sep=sep, encoding=enc, on_bad_lines="skip")
-adresse = pd.read_csv(address_path, sep=sep, encoding=enc)
-stat = pd.read_csv(stat_path, sep=sep, encoding=enc, usecols=["NUMMER", "ERSTKAUF"])
+kw_f01 = pd.read_csv(kw_path_f01, sep=sep, encoding=enc, on_bad_lines="skip")
+kw_f02 = pd.read_csv(kw_path_f02, sep=sep, encoding=enc, on_bad_lines="skip")
+kw_f03 = pd.read_csv(kw_path_f03, sep=sep, encoding=enc, on_bad_lines="skip")
+kw_f04 = pd.read_csv(kw_path_f04, sep=sep, encoding=enc, on_bad_lines="skip")
+adresse_f01 = pd.read_csv(address_path_f01, sep=sep, encoding=enc)
+adresse_f02 = pd.read_csv(address_path_f02, sep=sep, encoding=enc)
+adresse_f03 = pd.read_csv(address_path_f03, sep=sep, encoding=enc)
+adresse_f04 = pd.read_csv(address_path_f04, sep=sep, encoding=enc)
+stat_f01 = pd.read_csv(stat_path_f01, sep=sep, encoding=enc, usecols=["NUMMER", "ERSTKAUF"])
+stat_f02 = pd.read_csv(stat_path_f02, sep=sep, encoding=enc, usecols=["NUMMER", "ERSTKAUF"])
+stat_f03 = pd.read_csv(stat_path_f03, sep=sep, encoding=enc, usecols=["NUMMER", "ERSTKAUF"])
+stat_f04 = pd.read_csv(stat_path_f04, sep=sep, encoding=enc, usecols=["NUMMER", "ERSTKAUF"])
 
+kw = pd.concat([kw_f01, kw_f02, kw_f03, kw_f04], ignore_index=True)
+adresse = pd.concat([adresse_f01, adresse_f02, adresse_f03, adresse_f04], ignore_index=True)
+stat = pd.concat([stat_f01, stat_f02, stat_f03, stat_f04], ignore_index=True)
 
 
 ## mapping the names to the codes in the columns related to last HJ and current HJ in the KW data
@@ -48,7 +60,8 @@ address_kw = pd.merge(address_kw, stat, on="NUMMER", how="left")
 ### Cleaning up the df table, renaming the KW HJ column to Kundengruppe and removing duplicates from the data
 address_kw = address_kw[["NUMMER", "SYS_ANLAGE", last_hj, "ERSTKAUF"]]
 address_kw = address_kw.rename(columns={last_hj: "Kundengruppe"})
-address_kw = address_kw.drop_duplicates(subset="NUMMER")
+address_kw = address_kw.sort_values(by='Kundengruppe', na_position='last')
+address_kw = address_kw.drop_duplicates(subset="NUMMER",keep='first')
 
 ### Defining interessenten customers, those who are in the system but have no orders
 address_kw.loc[(address_kw["ERSTKAUF"].isna()), "Kundengruppe"] = "Interessenten"
@@ -67,7 +80,9 @@ nk_kw = pd.merge(nk_kw, stat, on="NUMMER", how="left")
 
 nk_kw = nk_kw[["NUMMER", "SYS_ANLAGE", current_hj, "ERSTKAUF"]]
 nk_kw = nk_kw.rename(columns={current_hj: "Kundengruppe"})
-nk_kw = nk_kw.drop_duplicates(subset="NUMMER")
+nk_kw = nk_kw.sort_values(by='Kundengruppe', na_position='last')
+nk_kw = nk_kw.drop_duplicates(subset="NUMMER",keep='first')
+
 ## Those with ERSTKAUF datum are neukunden-1 those without it are Interessenten
 nk_kw.loc[(nk_kw["ERSTKAUF"].isna()), "Kundengruppe"] = "Interessenten"
 nk_kw.loc[(nk_kw["ERSTKAUF"].notna()), "Kundengruppe"] = "Neukunden-1"
@@ -75,7 +90,8 @@ nk_kw.loc[(nk_kw["ERSTKAUF"].notna()), "Kundengruppe"] = "Neukunden-1"
 
 ## Concatenating the last hj customers with current hj customers
 address_kw_nk_kw = pd.concat([address_kw, nk_kw])
-address_kw_nk_kw = address_kw_nk_kw.drop_duplicates(subset="NUMMER")
+address_kw_nk_kw = address_kw_nk_kw.sort_values(by='Kundengruppe', na_position='last')
+address_kw_nk_kw = address_kw_nk_kw.drop_duplicates(subset="NUMMER",keep='first')
 ## Expanding the Neukunden-1 to those who are Interessenten but have an ERSTKAUF in the current hj
 address_kw_nk_kw.loc[
     (address_kw_nk_kw["SYS_ANLAGE"] <= prev_end)
@@ -98,8 +114,10 @@ nk = address_kw_nk_kw[address_kw_nk_kw["Kundengruppe"] == "Neukunden-1"][
 address_kw_nk_kw = address_kw_nk_kw[address_kw_nk_kw["Kundengruppe"] != "Neukunden-1"]
 all_addresses_labeled = pd.concat([address_kw_nk_kw, nk])
 ## Removing duplicated Nummers
-all_addresses_labeled = all_addresses_labeled.drop_duplicates(subset=["NUMMER"])
-today = dt.date.today()
+all_addresses_labeled = all_addresses_labeled.sort_values(by='Kundengruppe', na_position='last')
+
+all_addresses_labeled = all_addresses_labeled.drop_duplicates(subset=["NUMMER"],keep='first')
+
 all_addresses_labeled[["NUMMER", "Kundengruppe"]].to_csv(
     f"Data/kw.csv", sep=";", index=False, encoding="cp850"
 )
