@@ -355,13 +355,13 @@ def get_half_year_info(today: date = None, land: str = 'DE'):
     
     # Base reference: H1 2025 -> number 49
     base_half_year_start = date(2025, 1, 1)
-    if land == 'DE':
+    if land == 'F01':
         base_number = 49
-    elif land == 'AT':
+    elif land == 'F02':
         base_number = 37
-    elif land == 'FR':
+    elif land == 'F03':
         base_number = 28
-    elif land == 'CH':
+    elif land == 'F04':
         base_number = 35
 
     # Determine if we're in H1 or H2

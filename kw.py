@@ -8,10 +8,10 @@ from paths import *
 ## Repetitive setting
 enc = "cp850"
 sep = ";"
-
+land = 'F01'
 
 ### Defining the dates for the beginning and end of previous and Current HJ, as well as the Number of the Column in KW data
-result = get_half_year_info(land='FR')
+result = get_half_year_info(land=land)
 last_hj = f"Z{result['number']}"
 current_hj = f"Z{result['number'] + 1}"
 prev_start = pd.to_datetime(result["prev_start"])
@@ -23,9 +23,9 @@ current_end = pd.to_datetime(result["prev_end"] + relativedelta(months=6))
 ## Importing all required data
 kunden_segments = pd.read_excel(ks_path)
 kunden_segment_dict = dict(zip(kunden_segments["Alt"], kunden_segments["Neu"]))
-kw = pd.read_csv(kw_path_f02, sep=sep, encoding=enc, on_bad_lines="skip")
-adresse = pd.read_csv(address_path_f02, sep=sep, encoding=enc)
-stat = pd.read_csv(stat_path_f02, sep=sep, encoding=enc, usecols=["NUMMER", "ERSTKAUF"])
+kw = pd.read_csv(f'/Volumes/MARAL/CSV/{land}/V2AD2000.csv', sep=sep, encoding=enc, on_bad_lines="skip")
+adresse = pd.read_csv(f'/Volumes/MARAL/CSV/{land}/V2AD1001.csv', sep=sep, encoding=enc)
+stat = pd.read_csv(f'/Volumes/MARAL/CSV/{land}/V2AD1005.csv', sep=sep, encoding=enc, usecols=["NUMMER", "ERSTKAUF"])
 
 
 
@@ -101,5 +101,5 @@ all_addresses_labeled = pd.concat([address_kw_nk_kw, nk])
 all_addresses_labeled = all_addresses_labeled.drop_duplicates(subset=["NUMMER"])
 today = dt.date.today()
 all_addresses_labeled[["NUMMER", "Kundengruppe"]].to_csv(
-    f"Data/kw_f02.csv", sep=";", index=False, encoding="cp850"
+    f"Data/kw_{land}.csv", sep=";", index=False, encoding="cp850"
 )

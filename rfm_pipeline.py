@@ -2,14 +2,14 @@ import pandas as pd
 import datetime as dt
 from helper import *
 from paths import *
-
+land = 'F01'
 ## Assigning half-year bins for recency
 five_years_ago_start, two_years_ago_start, today = get_halfyear_reference_dates()
-half_year_info = get_half_year_info()
+half_year_info = get_half_year_info(land=land)
 print(half_year_info)
 ### ============== Import Files ============== ###
 addresses = pd.read_csv(
-    address_path_f02,
+    f"/Volumes/MARAL/CSV/{land}/V2AD1001.csv",
     sep=";",
     encoding="cp850",
     usecols=["NUMMER", "SYS_ANLAGE", "QUELLE", "GEBURT", "PLZ", "ANREDE"],
@@ -17,14 +17,14 @@ addresses = pd.read_csv(
     low_memory=False,
 )
 v21056 = pd.read_csv(
-    rechnung_path_f02, sep=";", encoding="cp850", parse_dates=["AUF_ANLAGE"]
+    f"/Volumes/MARAL/CSV/{land}/V2AD1056.csv", sep=";", encoding="cp850", parse_dates=["AUF_ANLAGE"]
 )
 
 inx = pd.read_excel(
     inx_path, usecols=["NUMMER", "NL_TYPE"]
 )  ## To be Updated with the path from the inxmail automated list
 kw = pd.read_csv(
-    "Data/kw_f02.csv", sep=";", encoding="cp850", usecols=["NUMMER", "Kundengruppe"]
+    f"Data/kw_{land}.csv", sep=";", encoding="cp850", usecols=["NUMMER", "Kundengruppe"]
 )
 
 ### ============== Clean-up Tables ============== ###
@@ -365,8 +365,8 @@ gesamt_gesamt = gesamt_gesamt.sort_values(by="rfm_label")
 #             writer, sheet_name=item, index=False
 #         )
 
-filtered_final_merged.to_csv('/Volumes/MARAL/Data/rfm_labels/rfm_labels_f02.csv', sep=';', index=False, encoding='cp850')
-with pd.ExcelWriter(f"Data/rfm_segments_{today.date()}_f02.xlsx", engine="xlsxwriter") as writer:
+filtered_final_merged.to_csv(f'/Volumes/MARAL/Data/rfm_labels/rfm_labels_{land}.csv', sep=';', index=False, encoding='cp850')
+with pd.ExcelWriter(f"Data/rfm_segments_{today.date()}_{land}.xlsx", engine="xlsxwriter") as writer:
     for item in kundengruppe:
         df = filtered_final_merged[filtered_final_merged["rfm_label"] == item]
         df.to_excel(writer, sheet_name=item, index=False)
@@ -409,7 +409,7 @@ with pd.ExcelWriter(f"Data/rfm_segments_{today.date()}_f02.xlsx", engine="xlsxwr
 
 # Export with formatting
 with pd.ExcelWriter(
-    f"Data/rfm_segments_gesamt_{today.date()}_f02.xlsx", engine="xlsxwriter"
+    f"Data/rfm_segments_gesamt_{today.date()}_{land}.xlsx", engine="xlsxwriter"
 ) as writer:
     # Write both tables
     gesamt_gesamt.to_excel(writer, sheet_name="RFM Gesamt Analytik", index=False)
