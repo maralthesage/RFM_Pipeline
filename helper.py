@@ -349,13 +349,20 @@ def process_date(data):
 
 
 
-def get_half_year_info(today: date = None):
+def get_half_year_info(today: date = None, land: str = 'DE'):
     if today is None:
         today = date.today()
     
     # Base reference: H1 2025 -> number 49
     base_half_year_start = date(2025, 1, 1)
-    base_number = 49
+    if land == 'DE':
+        base_number = 49
+    elif land == 'AT':
+        base_number = 37
+    elif land == 'FR':
+        base_number = 28
+    elif land == 'CH':
+        base_number = 35
 
     # Determine if we're in H1 or H2
     if today.month <= 6:

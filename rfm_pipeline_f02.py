@@ -9,7 +9,7 @@ half_year_info = get_half_year_info()
 print(half_year_info)
 ### ============== Import Files ============== ###
 addresses = pd.read_csv(
-    address_path,
+    address_path_f02,
     sep=";",
     encoding="cp850",
     usecols=["NUMMER", "SYS_ANLAGE", "QUELLE", "GEBURT", "PLZ", "ANREDE"],
@@ -17,14 +17,14 @@ addresses = pd.read_csv(
     low_memory=False,
 )
 v21056 = pd.read_csv(
-    rechnung_path, sep=";", encoding="cp850", parse_dates=["AUF_ANLAGE"]
+    rechnung_path_f02, sep=";", encoding="cp850", parse_dates=["AUF_ANLAGE"]
 )
 
 inx = pd.read_excel(
     inx_path, usecols=["NUMMER", "NL_TYPE"]
 )  ## To be Updated with the path from the inxmail automated list
 kw = pd.read_csv(
-    "Data/kw.csv", sep=";", encoding="cp850", usecols=["NUMMER", "Kundengruppe"]
+    "Data/kw_f02.csv", sep=";", encoding="cp850", usecols=["NUMMER", "Kundengruppe"]
 )
 
 ### ============== Clean-up Tables ============== ###
@@ -365,8 +365,8 @@ gesamt_gesamt = gesamt_gesamt.sort_values(by="rfm_label")
 #             writer, sheet_name=item, index=False
 #         )
 
-filtered_final_merged.to_csv('/Volumes/MARAL/Data/rfm_labels/rfm_labels.csv', sep=';', index=False, encoding='cp850')
-with pd.ExcelWriter(f"Data/rfm_segments_{today.date()}.xlsx", engine="xlsxwriter") as writer:
+filtered_final_merged.to_csv('/Volumes/MARAL/Data/rfm_labels/rfm_labels_f02.csv', sep=';', index=False, encoding='cp850')
+with pd.ExcelWriter(f"Data/rfm_segments_{today.date()}_f02.xlsx", engine="xlsxwriter") as writer:
     for item in kundengruppe:
         df = filtered_final_merged[filtered_final_merged["rfm_label"] == item]
         df.to_excel(writer, sheet_name=item, index=False)
@@ -409,7 +409,7 @@ with pd.ExcelWriter(f"Data/rfm_segments_{today.date()}.xlsx", engine="xlsxwriter
 
 # Export with formatting
 with pd.ExcelWriter(
-    f"Data/rfm_segments_gesamt_{today.date()}.xlsx", engine="xlsxwriter"
+    f"Data/rfm_segments_gesamt_{today.date()}_f02.xlsx", engine="xlsxwriter"
 ) as writer:
     # Write both tables
     gesamt_gesamt.to_excel(writer, sheet_name="RFM Gesamt Analytik", index=False)
