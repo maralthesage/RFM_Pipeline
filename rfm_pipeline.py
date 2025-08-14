@@ -2,6 +2,8 @@ import pandas as pd
 import datetime as dt
 from helper import *
 from paths import *
+
+lands = ["F01", "F02", "F03", "F04"]
 land = 'F01'
 ## Assigning half-year bins for recency
 five_years_ago_start, two_years_ago_start, today = get_halfyear_reference_dates()

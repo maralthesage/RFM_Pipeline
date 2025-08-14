@@ -8,6 +8,7 @@ from paths import *
 ## Repetitive setting
 enc = "cp850"
 sep = ";"
+lands = ["F01", "F02", "F03", "F04"]
 land = 'F01'
 
 ### Defining the dates for the beginning and end of previous and Current HJ, as well as the Number of the Column in KW data
